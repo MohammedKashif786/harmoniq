@@ -1,0 +1,40 @@
+[
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "trackId", "type": "uint256" },
+      { "internalType": "address[]", "name": "wallets", "type": "address[]" },
+      { "internalType": "uint256[]", "name": "sharesBPS", "type": "uint256[]" }
+    ],
+    "name": "setCollaborators",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "trackId", "type": "uint256" }],
+    "name": "distributeRoyalties",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "trackId", "type": "uint256" }],
+    "name": "getCollaborators",
+    "outputs": [
+      { "internalType": "address[]", "name": "", "type": "address[]" },
+      { "internalType": "uint256[]", "name": "", "type": "uint256[]" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "uint256", "name": "trackId", "type": "uint256" },
+      { "indexed": false, "internalType": "uint256", "name": "totalAmount", "type": "uint256" },
+      { "indexed": false, "internalType": "uint256", "name": "timestamp", "type": "uint256" }
+    ],
+    "name": "RoyaltiesDistributed",
+    "type": "event"
+  }
+]

@@ -1,0 +1,84 @@
+[
+  {
+    "inputs": [{ "internalType": "uint256", "name": "stemTokenId", "type": "uint256" }],
+    "name": "purchaseLicense",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "stemTokenId", "type": "uint256" },
+      { "internalType": "uint256", "name": "priceWei", "type": "uint256" },
+      { "internalType": "uint8", "name": "licenseType", "type": "uint8" }
+    ],
+    "name": "setStemPrice",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "address", "name": "buyer", "type": "address" }],
+    "name": "getLicenses",
+    "outputs": [
+      {
+        "components": [
+          { "internalType": "uint256", "name": "stemTokenId", "type": "uint256" },
+          { "internalType": "address", "name": "buyer", "type": "address" },
+          { "internalType": "uint8", "name": "licenseType", "type": "uint8" },
+          { "internalType": "uint256", "name": "paidAmount", "type": "uint256" },
+          { "internalType": "uint256", "name": "purchasedAt", "type": "uint256" },
+          { "internalType": "uint256", "name": "expiresAt", "type": "uint256" }
+        ],
+        "internalType": "struct StemLicensing.License[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "stemTokenId", "type": "uint256" }],
+    "name": "getStemLicenses",
+    "outputs": [
+      {
+        "components": [
+          { "internalType": "uint256", "name": "stemTokenId", "type": "uint256" },
+          { "internalType": "address", "name": "buyer", "type": "address" },
+          { "internalType": "uint8", "name": "licenseType", "type": "uint8" },
+          { "internalType": "uint256", "name": "paidAmount", "type": "uint256" },
+          { "internalType": "uint256", "name": "purchasedAt", "type": "uint256" },
+          { "internalType": "uint256", "name": "expiresAt", "type": "uint256" }
+        ],
+        "internalType": "struct StemLicensing.License[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "name": "stemPrices",
+    "outputs": [
+      { "internalType": "uint256", "name": "priceWei", "type": "uint256" },
+      { "internalType": "uint8", "name": "licenseType", "type": "uint8" },
+      { "internalType": "bool", "name": "active", "type": "bool" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "uint256", "name": "stemTokenId", "type": "uint256" },
+      { "indexed": true, "internalType": "address", "name": "buyer", "type": "address" },
+      { "indexed": false, "internalType": "uint8", "name": "licenseType", "type": "uint8" },
+      { "indexed": false, "internalType": "uint256", "name": "amountPaid", "type": "uint256" }
+    ],
+    "name": "LicensePurchased",
+    "type": "event"
+  }
+]
