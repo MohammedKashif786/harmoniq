@@ -1,16 +1,339 @@
 [
   {
-    "inputs": [{ "internalType": "uint256", "name": "stemTokenId", "type": "uint256" }],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "stemNFTAddress",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnableInvalidOwner",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "OwnableUnauthorizedAccount",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "stemTokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "buyer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum StemLicensing.LicenseType",
+        "name": "licenseType",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amountPaid",
+        "type": "uint256"
+      }
+    ],
+    "name": "LicensePurchased",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "stemTokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "priceWei",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum StemLicensing.LicenseType",
+        "name": "licenseType",
+        "type": "uint8"
+      }
+    ],
+    "name": "StemPriceSet",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "accumulatedFees",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "buyerLicenses",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "stemTokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "buyer",
+        "type": "address"
+      },
+      {
+        "internalType": "enum StemLicensing.LicenseType",
+        "name": "licenseType",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paidAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "purchasedAt",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "expiresAt",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "buyer",
+        "type": "address"
+      }
+    ],
+    "name": "getLicenses",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "stemTokenId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "buyer",
+            "type": "address"
+          },
+          {
+            "internalType": "enum StemLicensing.LicenseType",
+            "name": "licenseType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "paidAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "purchasedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "expiresAt",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct StemLicensing.License[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "stemTokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getStemLicenses",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "stemTokenId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "buyer",
+            "type": "address"
+          },
+          {
+            "internalType": "enum StemLicensing.LicenseType",
+            "name": "licenseType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "paidAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "purchasedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "expiresAt",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct StemLicensing.License[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "platformFeePercent",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "stemTokenId",
+        "type": "uint256"
+      }
+    ],
     "name": "purchaseLicense",
     "outputs": [],
     "stateMutability": "payable",
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [
-      { "internalType": "uint256", "name": "stemTokenId", "type": "uint256" },
-      { "internalType": "uint256", "name": "priceWei", "type": "uint256" },
-      { "internalType": "uint8", "name": "licenseType", "type": "uint8" }
+      {
+        "internalType": "uint256",
+        "name": "stemTokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "priceWei",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum StemLicensing.LicenseType",
+        "name": "licenseType",
+        "type": "uint8"
+      }
     ],
     "name": "setStemPrice",
     "outputs": [],
@@ -18,67 +341,118 @@
     "type": "function"
   },
   {
-    "inputs": [{ "internalType": "address", "name": "buyer", "type": "address" }],
-    "name": "getLicenses",
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "stemLicenses",
     "outputs": [
       {
-        "components": [
-          { "internalType": "uint256", "name": "stemTokenId", "type": "uint256" },
-          { "internalType": "address", "name": "buyer", "type": "address" },
-          { "internalType": "uint8", "name": "licenseType", "type": "uint8" },
-          { "internalType": "uint256", "name": "paidAmount", "type": "uint256" },
-          { "internalType": "uint256", "name": "purchasedAt", "type": "uint256" },
-          { "internalType": "uint256", "name": "expiresAt", "type": "uint256" }
-        ],
-        "internalType": "struct StemLicensing.License[]",
-        "name": "",
-        "type": "tuple[]"
+        "internalType": "uint256",
+        "name": "stemTokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "buyer",
+        "type": "address"
+      },
+      {
+        "internalType": "enum StemLicensing.LicenseType",
+        "name": "licenseType",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paidAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "purchasedAt",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "expiresAt",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "inputs": [{ "internalType": "uint256", "name": "stemTokenId", "type": "uint256" }],
-    "name": "getStemLicenses",
+    "inputs": [],
+    "name": "stemNFT",
     "outputs": [
       {
-        "components": [
-          { "internalType": "uint256", "name": "stemTokenId", "type": "uint256" },
-          { "internalType": "address", "name": "buyer", "type": "address" },
-          { "internalType": "uint8", "name": "licenseType", "type": "uint8" },
-          { "internalType": "uint256", "name": "paidAmount", "type": "uint256" },
-          { "internalType": "uint256", "name": "purchasedAt", "type": "uint256" },
-          { "internalType": "uint256", "name": "expiresAt", "type": "uint256" }
-        ],
-        "internalType": "struct StemLicensing.License[]",
+        "internalType": "contract IStemNFT",
         "name": "",
-        "type": "tuple[]"
+        "type": "address"
       }
     ],
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "name": "stemPrices",
     "outputs": [
-      { "internalType": "uint256", "name": "priceWei", "type": "uint256" },
-      { "internalType": "uint8", "name": "licenseType", "type": "uint8" },
-      { "internalType": "bool", "name": "active", "type": "bool" }
+      {
+        "internalType": "uint256",
+        "name": "priceWei",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum StemLicensing.LicenseType",
+        "name": "licenseType",
+        "type": "uint8"
+      },
+      {
+        "internalType": "bool",
+        "name": "active",
+        "type": "bool"
+      }
     ],
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "anonymous": false,
     "inputs": [
-      { "indexed": true, "internalType": "uint256", "name": "stemTokenId", "type": "uint256" },
-      { "indexed": true, "internalType": "address", "name": "buyer", "type": "address" },
-      { "indexed": false, "internalType": "uint8", "name": "licenseType", "type": "uint8" },
-      { "indexed": false, "internalType": "uint256", "name": "amountPaid", "type": "uint256" }
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
     ],
-    "name": "LicensePurchased",
-    "type": "event"
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "withdrawFees",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "receive"
   }
 ]

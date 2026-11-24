@@ -1,6 +1,15 @@
 {
   "name": "harmoniq-contracts",
   "version": "1.0.0",
+  "description": "Smart contracts for Harmoniq: Blockchain-Based Song Stem Management System",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "node": "hardhat node",
+    "deploy": "hardhat run scripts/deploy-and-seed.js",
+    "deploy:local": "hardhat run scripts/deploy-and-seed.js --network localhost",
+    "sync-abis": "node scripts/sync-abis.js"
+  },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "hardhat": "^2.22.0"

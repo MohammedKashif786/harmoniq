@@ -1,10 +1,18 @@
-import { useState } from 'react'
-import useWallet from '../hooks/useWallet.js'
+import { useState } from 'react';
+import useWallet from '../hooks/useWallet.js';
 
 export default function WalletButton() {
-  const { isConnected, isConnecting, truncatedAddress, connectWallet, disconnectWallet } =
-    useWallet()
-  const [hovered, setHovered] = useState(false)
+  const {
+    isConnected,
+    isConnecting,
+    truncatedAddress,
+    chainId,
+    connectWallet,
+    disconnectWallet,
+    switchNetwork,
+  } = useWallet();
+
+  const [hovered, setHovered] = useState(false);
 
   if (typeof window !== 'undefined' && !window.ethereum) {
     return (
@@ -14,7 +22,7 @@ export default function WalletButton() {
       >
         Install MetaMask
       </button>
-    )
+    );
   }
 
   if (!isConnected) {
@@ -36,22 +44,48 @@ export default function WalletButton() {
           'Connect Wallet'
         )}
       </button>
-    )
+    );
+  }
+
+  const isHardhat = chainId === '0x7a69' || chainId === 31337 || chainId === '31337';
+  const isSepolia = chainId === '0xaa36a7' || chainId === 11155111 || chainId === '11155111';
+
+  let networkLabel = 'Unknown Net';
+  let networkClass = 'bg-gray-800 text-gray-400 border-gray-700';
+
+  if (isHardhat) {
+    networkLabel = 'Hardhat 31337';
+    networkClass = 'bg-amber-950/60 text-amber-400 border-amber-800/80';
+  } else if (isSepolia) {
+    networkLabel = 'Sepolia';
+    networkClass = 'bg-indigo-950/60 text-indigo-400 border-indigo-800/80';
   }
 
   return (
-    <div
-      className="bg-gray-800 rounded-full px-4 py-2 flex items-center gap-2 cursor-pointer hover:bg-gray-700 transition"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      onClick={hovered ? disconnectWallet : undefined}
-      title="Click to disconnect"
-    >
-      <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
-      <span className="text-white text-sm font-mono">{truncatedAddress}</span>
-      {hovered && (
-        <span className="text-red-400 text-xs ml-1">✕ Disconnect</span>
-      )}
+    <div className="flex items-center gap-2">
+      {/* Network Switcher Pill */}
+      <button
+        onClick={() => switchNetwork(isHardhat ? 'sepolia' : 'hardhat')}
+        title="Click to toggle between Hardhat Local and Sepolia"
+        className={`border rounded-full px-2.5 py-1 text-xs font-mono font-semibold transition hover:brightness-125 ${networkClass}`}
+      >
+        ● {networkLabel}
+      </button>
+
+      {/* Account Info Pill */}
+      <div
+        className="bg-gray-800 border border-gray-700 rounded-full px-3.5 py-1.5 flex items-center gap-2 cursor-pointer hover:bg-gray-700 transition"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        onClick={hovered ? disconnectWallet : undefined}
+        title="Click to disconnect"
+      >
+        <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
+        <span className="text-white text-xs font-mono font-semibold">{truncatedAddress}</span>
+        {hovered && (
+          <span className="text-red-400 text-[11px] ml-1 font-bold">✕ Disconnect</span>
+        )}
+      </div>
     </div>
-  )
+  );
 }

@@ -1,9 +1,181 @@
 [
   {
+    "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
     "inputs": [
-      { "internalType": "uint256", "name": "trackId", "type": "uint256" },
-      { "internalType": "address[]", "name": "wallets", "type": "address[]" },
-      { "internalType": "uint256[]", "name": "sharesBPS", "type": "uint256[]" }
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnableInvalidOwner",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "OwnableUnauthorizedAccount",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "trackId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "collaboratorCount",
+        "type": "uint256"
+      }
+    ],
+    "name": "CollaboratorsSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "trackId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "totalAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "collaboratorCount",
+        "type": "uint256"
+      }
+    ],
+    "name": "RoyaltiesDistributed",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "trackId",
+        "type": "uint256"
+      }
+    ],
+    "name": "clearCollaborators",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "trackId",
+        "type": "uint256"
+      }
+    ],
+    "name": "distributeRoyalties",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "trackId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getCollaborators",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "wallets",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "shares",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "trackId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address[]",
+        "name": "wallets",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "sharesBPS",
+        "type": "uint256[]"
+      }
     ],
     "name": "setCollaborators",
     "outputs": [],
@@ -11,37 +183,49 @@
     "type": "function"
   },
   {
-    "inputs": [{ "internalType": "uint256", "name": "trackId", "type": "uint256" }],
-    "name": "distributeRoyalties",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [{ "internalType": "uint256", "name": "trackId", "type": "uint256" }],
-    "name": "getCollaborators",
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "trackCollaborators",
     "outputs": [
       {
-        "components": [
-          { "internalType": "address", "name": "wallet", "type": "address" },
-          { "internalType": "uint256", "name": "sharesBPS", "type": "uint256" }
-        ],
-        "internalType": "struct RoyaltySplitter.Collaborator[]",
-        "name": "",
-        "type": "tuple[]"
+        "internalType": "address",
+        "name": "wallet",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "sharesBPS",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "anonymous": false,
     "inputs": [
-      { "indexed": true, "internalType": "uint256", "name": "trackId", "type": "uint256" },
-      { "indexed": false, "internalType": "uint256", "name": "totalAmount", "type": "uint256" },
-      { "indexed": false, "internalType": "uint256", "name": "timestamp", "type": "uint256" }
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
     ],
-    "name": "RoyaltiesDistributed",
-    "type": "event"
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "receive"
   }
 ]
