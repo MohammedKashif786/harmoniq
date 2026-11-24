@@ -7,6 +7,7 @@ export default function Navbar() {
   const navLinks = [
     { to: '/', label: 'Home' },
     { to: '/marketplace', label: 'Marketplace' },
+    { to: '/studio', label: '⚡ Remix Studio', highlight: true },
     { to: '/upload', label: 'Upload Studio' },
     { to: '/dashboard', label: 'Dashboard' },
     { to: '/leaderboard', label: 'Leaderboard' },
@@ -58,6 +59,8 @@ export default function Navbar() {
                     className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                       active
                         ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30 shadow-sm'
+                        : link.highlight
+                        ? 'text-cyan-300 hover:text-white bg-gradient-to-r from-cyan-950/50 to-purple-950/50 border border-cyan-500/30 hover:border-cyan-400/50'
                         : 'text-slate-400 hover:text-white hover:bg-white/5'
                     }`}
                   >

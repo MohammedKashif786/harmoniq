@@ -7,6 +7,7 @@ import TrackDetail from './pages/TrackDetail.jsx'
 import Upload from './pages/Upload.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import Leaderboard from './pages/Leaderboard.jsx'
+import RemixStudio from './pages/RemixStudio.jsx'
 
 export default function App() {
   return (
@@ -16,6 +17,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/marketplace" element={<Marketplace />} />
+          <Route path="/studio" element={<RemixStudio />} />
+          <Route path="/remix" element={<RemixStudio />} />
           <Route path="/stems/:id" element={<StemDetail />} />
           <Route path="/tracks/:id" element={<TrackDetail />} />
           <Route path="/upload" element={<Upload />} />
