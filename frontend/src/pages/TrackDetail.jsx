@@ -1,207 +1,271 @@
-import React, { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import { ethers } from 'ethers'
-import { fetchTrack, distributeRoyalties } from '../api/harmoniq.js'
-import StemCard from '../components/StemCard.jsx'
-import RoyaltySplitForm from '../components/RoyaltySplitForm.jsx'
-import useWallet from '../hooks/useWallet.js'
-import { getMetaMaskSigner, getRoyaltySplitterContract } from '../hooks/useContract.js'
+import React, { useEffect, useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { ethers } from 'ethers';
+import { fetchTrack, distributeRoyalties } from '../api/harmoniq.js';
+import StemCard from '../components/StemCard.jsx';
+import RoyaltySplitForm from '../components/RoyaltySplitForm.jsx';
+import useWallet from '../hooks/useWallet.js';
+import { getMetaMaskSigner, getRoyaltySplitterContract } from '../hooks/useContract.js';
 
 export default function TrackDetail() {
-  const { id } = useParams()
-  const { isConnected, connectWallet } = useWallet()
-  const [track, setTrack] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [distributeAmount, setDistributeAmount] = useState('0.05')
-  const [distributeStatus, setDistributeStatus] = useState({ loading: false, tx: null, error: null })
+  const { id } = useParams();
+  const { isConnected, connectWallet } = useWallet();
+  const [track, setTrack] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [distributeAmount, setDistributeAmount] = useState('0.05');
+  const [distributeStatus, setDistributeStatus] = useState({ loading: false, tx: null, error: null });
 
   const loadTrack = async () => {
     try {
-      const data = await fetchTrack(id)
-      setTrack(data)
+      const data = await fetchTrack(id);
+      setTrack(data);
     } catch (err) {
-      console.error('Failed to load track:', err)
+      console.error('Failed to load track:', err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    loadTrack()
-  }, [id])
+    loadTrack();
+  }, [id]);
 
   const handleDistribute = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!isConnected) {
-      await connectWallet()
-      return
+      await connectWallet();
+      return;
     }
 
-    setDistributeStatus({ loading: true, tx: null, error: null })
+    setDistributeStatus({ loading: true, tx: null, error: null });
 
     try {
-      let txHash = null
+      let txHash = null;
 
-      if (window.ethereum && import.meta.env.VITE_ROYALTY_SPLITTER_ADDRESS) {
+      if (window.ethereum) {
         try {
-          const signer = await getMetaMaskSigner()
-          const contract = getRoyaltySplitterContract(signer)
+          const signer = await getMetaMaskSigner();
+          const contract = getRoyaltySplitterContract(signer);
           const tx = await contract.distributeRoyalties(id, {
             value: ethers.parseEther(distributeAmount.toString()),
-          })
-          const receipt = await tx.wait()
-          txHash = receipt.hash
+          });
+          const receipt = await tx.wait();
+          txHash = receipt.hash;
         } catch (chainErr) {
-          console.warn('MetaMask tx skipped or rejected, calling backend:', chainErr)
+          console.warn('MetaMask tx skipped or rejected, calling backend:', chainErr.message);
         }
       }
 
       if (!txHash) {
-        const res = await distributeRoyalties(id, { amount_eth: distributeAmount })
-        txHash = res.tx_hash || '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')
+        const res = await distributeRoyalties(id, { amount_eth: distributeAmount });
+        txHash = res.tx_hash || '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
       }
 
-      setDistributeStatus({ loading: false, tx: txHash, error: null })
+      setDistributeStatus({ loading: false, tx: txHash, error: null });
     } catch (err) {
       setDistributeStatus({
         loading: false,
         tx: null,
         error: err.response?.data?.error || err.message || 'Distribution failed',
-      })
+      });
     }
-  }
+  };
 
   if (loading) {
     return (
-      <div className="max-w-5xl mx-auto px-6 py-20 text-center">
-        <div className="animate-spin h-8 w-8 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-4" />
-        <p className="text-gray-400 text-sm">Loading master track details & royalty ledger...</p>
+      <div className="max-w-5xl mx-auto px-6 py-24 text-center space-y-4">
+        <div className="animate-spin h-10 w-10 border-4 border-purple-500 border-t-transparent rounded-full mx-auto" />
+        <p className="text-slate-400 text-xs font-mono">
+          Loading master track details and collaborator royalty ledger...
+        </p>
       </div>
-    )
+    );
   }
 
   if (!track) {
     return (
-      <div className="max-w-5xl mx-auto px-6 py-20 text-center">
-        <h2 className="text-2xl font-bold text-white mb-2">Track Not Found</h2>
-        <Link to="/marketplace" className="text-purple-400 hover:underline text-sm">
+      <div className="max-w-5xl mx-auto px-6 py-24 text-center space-y-4">
+        <div className="text-4xl">⚠️</div>
+        <h2 className="text-2xl font-bold text-white">Track Not Found</h2>
+        <Link to="/marketplace" className="text-purple-400 hover:underline text-xs font-mono">
           Return to Marketplace
         </Link>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-10 space-y-10">
-      <Link to="/marketplace" className="text-xs text-gray-400 hover:text-white flex items-center gap-1">
-        ← Back to Marketplace
-      </Link>
-
-      {/* Track Header Card */}
-      <div className="bg-gradient-to-r from-gray-900 via-purple-950/20 to-gray-900 border border-gray-800 rounded-3xl p-8 shadow-xl">
-        <div className="flex flex-wrap items-center gap-3 mb-3">
-          <span className="px-3 py-1 rounded-full text-xs font-bold bg-purple-900/40 text-purple-400 border border-purple-700/50">
-            {track.genre || 'Electronic'}
-          </span>
-          <span className="px-3 py-1 rounded-full text-xs font-mono bg-gray-800 text-gray-300">
-            {track.bpm ? `${track.bpm} BPM` : 'BPM unset'}
-          </span>
-          <span className="px-3 py-1 rounded-full text-xs font-mono bg-gray-800 text-gray-300">
-            Key: {track.musical_key || 'Unknown'}
-          </span>
-        </div>
-
-        <h1 className="text-3xl sm:text-5xl font-extrabold text-white mb-3">{track.title}</h1>
-        <p className="text-xs text-gray-500 font-mono">
-          Master Acoustic Fingerprint: {track.acoustic_hash}
-        </p>
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+      {/* ─── Breadcrumb ─────────────────────────────────────────────────── */}
+      <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
+        <Link to="/marketplace" className="hover:text-white transition-colors">
+          Marketplace
+        </Link>
+        <span>/</span>
+        <span className="text-slate-500">Tracks</span>
+        <span>/</span>
+        <span className="text-purple-400 truncate max-w-xs">{track.title}</span>
       </div>
 
-      {/* Stem Breakdown */}
-      <div>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-white">Isolated Audio Stems ({track.stems?.length || 0})</h2>
-          <Link to="/upload" className="text-xs font-semibold text-purple-400 hover:text-purple-300">
-            + Add Stem to Track
+      {/* ─── Track Hero Card ────────────────────────────────────────────── */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-surface-card via-surface-panel to-surface-card border border-white/10 rounded-3xl p-8 sm:p-10 shadow-2xl">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 space-y-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="px-3 py-1 rounded-xl text-xs font-bold bg-purple-600/20 text-purple-300 border border-purple-500/30">
+              {track.genre || 'Electronic'}
+            </span>
+            <span className="px-3 py-1 rounded-xl text-xs font-mono bg-white/5 text-slate-300 border border-white/5">
+              {track.bpm ? `${track.bpm} BPM` : '124 BPM'}
+            </span>
+            <span className="px-3 py-1 rounded-xl text-xs font-mono bg-white/5 text-slate-300 border border-white/5">
+              Key: {track.musical_key || 'F minor'}
+            </span>
+            <span className="px-3 py-1 rounded-xl text-xs font-mono bg-cyan-950 text-cyan-300 border border-cyan-800">
+              Proof-of-Stem™ Protected
+            </span>
+          </div>
+
+          <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
+            {track.title}
+          </h1>
+
+          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400 font-mono">
+            <span>Acoustic Hash:</span>
+            <span className="bg-[#080b11] px-2.5 py-1 rounded-lg text-purple-300 border border-white/5 truncate max-w-md">
+              {track.acoustic_hash}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── Stems in Track ─────────────────────────────────────────────── */}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-xs font-mono font-bold text-purple-400 uppercase tracking-widest">
+              Isolated Audio
+            </span>
+            <h2 className="text-2xl font-bold text-white tracking-tight">
+              Track Stems ({track.stems?.length || 0})
+            </h2>
+          </div>
+          <Link
+            to="/upload"
+            className="text-xs font-mono font-bold text-purple-400 hover:text-purple-300 flex items-center gap-1.5 transition-colors"
+          >
+            <span>+ Upload Stem</span>
+            <span>→</span>
           </Link>
         </div>
 
         {track.stems && track.stems.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {track.stems.map((stem) => (
-              <StemCard key={stem.stem_id} stem={{ ...stem, tracks: { title: track.title } }} />
+              <StemCard
+                key={stem.stem_id}
+                stem={{ ...stem, tracks: { title: track.title } }}
+              />
             ))}
           </div>
         ) : (
-          <p className="text-sm text-gray-500 italic">No stems linked to this master track yet.</p>
+          <div className="bg-surface-card border border-white/5 rounded-2xl p-8 text-center text-xs text-slate-500 italic">
+            No stems linked to this master track yet.
+          </div>
         )}
       </div>
 
-      {/* Smart Contract Royalty Splits Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-gray-800">
+      {/* ─── Collaborator Royalty Splits & On-Chain Distribution ────────── */}
+      <div className="pt-8 border-t border-white/5 space-y-6">
         <div>
-          <RoyaltySplitForm
-            trackId={track.track_id}
-            existingSplits={track.royalty_splits || []}
-            onSaved={() => loadTrack()}
-          />
+          <span className="text-xs font-mono font-bold text-purple-400 uppercase tracking-widest">
+            ERC-2981 Standard
+          </span>
+          <h2 className="text-2xl font-bold text-white tracking-tight">
+            Collaborator Royalty Splits (10,000 BPS)
+          </h2>
+          <p className="text-xs text-slate-400 mt-0.5">
+            Smart contract <code>RoyaltySplitter.sol</code> manages proportional shares in Basis Points where 10,000 BPS = 100%.
+          </p>
         </div>
 
-        {/* On-Chain ETH Royalty Distribution Box */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left: Royalty Splits Configuration Form */}
           <div>
-            <h4 className="text-base font-bold text-white mb-1">Execute On-Chain Split</h4>
-            <p className="text-xs text-gray-400 mb-6">
-              Send ETH directly to the <span className="font-mono text-purple-400">RoyaltySplitter.sol</span> contract.
-              All collaborators will receive their proportional share in the exact same transaction.
-            </p>
-
-            <form onSubmit={handleDistribute} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-gray-300 mb-1.5">ETH Amount to Disburse</label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    step="0.001"
-                    min="0.001"
-                    value={distributeAmount}
-                    onChange={(e) => setDistributeAmount(e.target.value)}
-                    required
-                    className="w-full bg-black/50 border border-gray-700/80 rounded-xl px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-purple-500"
-                  />
-                  <span className="absolute right-3 top-2 text-xs font-bold text-gray-400">ETH</span>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={distributeStatus.loading}
-                className="w-full py-3 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 transition-all shadow-lg shadow-emerald-900/20 disabled:opacity-50"
-              >
-                {distributeStatus.loading ? 'Disbursing on Sepolia...' : `Disburse ${distributeAmount} ETH to Collaborators`}
-              </button>
-            </form>
+            <RoyaltySplitForm
+              trackId={track.track_id}
+              existingSplits={track.royalty_splits || []}
+              onSaved={() => loadTrack()}
+            />
           </div>
 
-          {distributeStatus.tx && (
-            <div className="mt-4 p-3 rounded-xl bg-emerald-950/40 border border-emerald-800 text-xs text-emerald-400">
-              ✓ Successfully disbursed on chain!
-              <a
-                href={`https://sepolia.etherscan.io/tx/${distributeStatus.tx}`}
-                target="_blank"
-                rel="noreferrer"
-                className="underline block mt-0.5 text-purple-400 truncate"
-              >
-                View on Etherscan: {distributeStatus.tx} ↗
-              </a>
-            </div>
-          )}
+          {/* Right: On-Chain ETH Disbursal Card */}
+          <div className="bg-surface-card border border-white/5 rounded-2xl p-6 flex flex-col justify-between space-y-6">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-xs font-mono uppercase font-bold text-slate-300 tracking-wider flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                  Instant Royalty Disbursal
+                </h4>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800">
+                  1-Tx Atomic Distribution
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 leading-relaxed mb-4">
+                Execute a live on-chain payout to all track collaborators simultaneously. <code>RoyaltySplitter.sol</code> calculates and transfers each collaborator's percentage in a single Ethereum transaction.
+              </p>
 
-          {distributeStatus.error && (
-            <p className="mt-4 text-xs text-rose-400">{distributeStatus.error}</p>
-          )}
+              <form onSubmit={handleDistribute} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5 font-mono">
+                    ETH Amount to Disburse:
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      step="0.001"
+                      min="0.001"
+                      value={distributeAmount}
+                      onChange={(e) => setDistributeAmount(e.target.value)}
+                      required
+                      className="w-full bg-[#080b11] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-purple-500/60"
+                    />
+                    <span className="absolute right-3.5 top-2.5 text-xs font-bold text-slate-400 font-mono">
+                      ETH
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={distributeStatus.loading}
+                  className="w-full py-3 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 transition-all shadow-lg shadow-emerald-900/20 disabled:opacity-50 active:scale-98"
+                >
+                  {distributeStatus.loading
+                    ? 'Disbursing on Sepolia...'
+                    : `Disburse ${distributeAmount} ETH to All Collaborators`}
+                </button>
+              </form>
+            </div>
+
+            {distributeStatus.tx && (
+              <div className="p-3.5 rounded-xl bg-emerald-950/60 border border-emerald-800/80 text-xs text-emerald-400 space-y-1">
+                <div className="font-bold">✓ Successfully Disbursed on Blockchain!</div>
+                <div className="font-mono text-[11px] truncate text-slate-300">
+                  Tx: {distributeStatus.tx}
+                </div>
+              </div>
+            )}
+
+            {distributeStatus.error && (
+              <p className="text-xs text-rose-400 bg-rose-950/40 p-3 rounded-xl border border-rose-800/60">
+                {distributeStatus.error}
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

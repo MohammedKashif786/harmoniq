@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { fetchPopularStems, fetchStems } from '../api/harmoniq.js'
-import StemCard from '../components/StemCard.jsx'
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { fetchPopularStems, fetchStems } from '../api/harmoniq.js';
+import StemCard from '../components/StemCard.jsx';
 
 export default function Home() {
-  const [popularStems, setPopularStems] = useState([])
-  const [stats, setStats] = useState({ stems: 20, minted: 14, licenses: 14 })
-  const [loading, setLoading] = useState(true)
+  const [popularStems, setPopularStems] = useState([]);
+  const [stats, setStats] = useState({ stems: 8, minted: 7, licenses: 4, volumeEth: '0.335' });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
@@ -14,139 +14,252 @@ export default function Home() {
         const [pop, allStems] = await Promise.all([
           fetchPopularStems(),
           fetchStems(),
-        ])
-        setPopularStems(pop.slice(0, 6))
+        ]);
+        setPopularStems(pop.slice(0, 6));
 
         const mintedCount = allStems.filter(
-          (s) => s.stem_mints && s.stem_mints.length > 0
-        ).length
+          (s) => (s.stem_mints && s.stem_mints.length > 0) || s.token_id
+        ).length;
 
         setStats({
-          stems: allStems.length || 20,
-          minted: mintedCount || 14,
-          licenses: 14,
-        })
+          stems: allStems.length || 8,
+          minted: mintedCount || 7,
+          licenses: 4,
+          volumeEth: '0.335',
+        });
       } catch (err) {
-        console.warn('Using default demo stats:', err)
+        console.warn('Using default demo stats:', err);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
-    loadData()
-  }, [])
+    loadData();
+  }, []);
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-12">
-      {/* Hero Section */}
-      <section className="text-center py-16 relative">
-        <div className="absolute inset-0 -top-24 bg-gradient-to-b from-purple-900/20 via-transparent to-transparent blur-3xl -z-10 pointer-events-none" />
-        
-        <span className="inline-block py-1 px-3 rounded-full bg-purple-950/60 border border-purple-800 text-purple-300 text-xs font-semibold mb-6">
-          Ethereum Sepolia + Supabase Hybrid Architecture
-        </span>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-20">
+      {/* ─── 1. HERO SECTION ────────────────────────────────────────────── */}
+      <section className="relative pt-12 pb-16 overflow-hidden">
+        {/* Ambient background glows */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-gradient-to-tr from-purple-600/20 via-indigo-500/15 to-cyan-400/15 rounded-full blur-[100px] pointer-events-none -z-10" />
 
-        <h1 className="text-4xl sm:text-6xl font-extrabold text-white tracking-tight mb-6">
-          Blockchain-Powered{' '}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-violet-300 to-indigo-400">
-            Song Stem Marketplace
+        <div className="text-center max-w-4xl mx-auto space-y-6">
+          {/* Top Pill */}
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-surface-card border border-white/10 shadow-lg shadow-purple-950/40">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-xs font-mono font-semibold text-slate-300">
+              Sepolia Testnet + Supabase Architecture &bull; RVCE DBMS
+            </span>
+          </div>
+
+          {/* Main Title */}
+          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white tracking-tight leading-[1.1]">
+            Decentralized Audio Management &{' '}
+            <span className="bg-gradient-to-r from-purple-400 via-violet-300 to-cyan-300 bg-clip-text text-transparent">
+              Proof-of-Stem™
+            </span>
+          </h1>
+
+          {/* Subtitle */}
+          <p className="max-w-2xl mx-auto text-slate-300 text-base sm:text-lg leading-relaxed font-normal">
+            Harmoniq bridges music production with blockchain integrity: cryptographic acoustic fingerprinting,
+            ERC-721 stem tokenization, and 10,000 BPS automated royalty splits for modern collaborators.
+          </p>
+
+          {/* Hero CTAs */}
+          <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
+            <Link
+              to="/marketplace"
+              className="px-8 py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-500 hover:to-indigo-500 transition-all shadow-xl shadow-purple-900/30 text-sm flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <span>Explore Stem Catalog</span>
+              <span>→</span>
+            </Link>
+
+            <Link
+              to="/upload"
+              className="px-8 py-3.5 rounded-xl font-bold text-slate-200 hover:text-white bg-surface-card hover:bg-surface-panel border border-white/10 transition-all text-sm flex items-center gap-2 hover:border-purple-500/40"
+            >
+              <span>Upload Master & Stems</span>
+              <span className="text-purple-400">⚡</span>
+            </Link>
+
+            <a
+              href="http://localhost:3001/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-5 py-3.5 rounded-xl font-mono text-xs font-semibold text-cyan-300 hover:text-white bg-cyan-950/30 border border-cyan-800/40 hover:bg-cyan-900/40 transition-all flex items-center gap-1.5"
+            >
+              <span>Backend API Explorer</span>
+              <span>↗</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── 2. LIVE METRICS ROW ────────────────────────────────────────── */}
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-surface-card border border-white/5 rounded-2xl p-5 hover:border-purple-500/30 transition-all">
+          <div className="text-[11px] font-mono font-semibold uppercase tracking-wider text-slate-400 mb-1">
+            Indexed Audio Stems
+          </div>
+          <div className="text-3xl font-black font-mono text-purple-400">
+            {stats.stems}
+          </div>
+          <div className="text-[11px] text-slate-400 mt-1">Vocals, Bass, Drums, Melodies</div>
+        </div>
+
+        <div className="bg-surface-card border border-white/5 rounded-2xl p-5 hover:border-indigo-500/30 transition-all">
+          <div className="text-[11px] font-mono font-semibold uppercase tracking-wider text-slate-400 mb-1">
+            On-Chain NFTs Minted
+          </div>
+          <div className="text-3xl font-black font-mono text-cyan-400">
+            {stats.minted}
+          </div>
+          <div className="text-[11px] text-slate-400 mt-1">ERC-721 + ERC-2981 Standard</div>
+        </div>
+
+        <div className="bg-surface-card border border-white/5 rounded-2xl p-5 hover:border-emerald-500/30 transition-all">
+          <div className="text-[11px] font-mono font-semibold uppercase tracking-wider text-slate-400 mb-1">
+            Smart Contract Licenses
+          </div>
+          <div className="text-3xl font-black font-mono text-emerald-400">
+            {stats.licenses}
+          </div>
+          <div className="text-[11px] text-slate-400 mt-1">Commercial, Remix, Exclusive</div>
+        </div>
+
+        <div className="bg-surface-card border border-white/5 rounded-2xl p-5 hover:border-amber-500/30 transition-all">
+          <div className="text-[11px] font-mono font-semibold uppercase tracking-wider text-slate-400 mb-1">
+            Royalty Split Engine
+          </div>
+          <div className="text-3xl font-black font-mono text-amber-400">
+            10,000 <span className="text-sm font-normal text-slate-400">BPS</span>
+          </div>
+          <div className="text-[11px] text-slate-400 mt-1">Proportional 1-Tx ETH Splits</div>
+        </div>
+      </section>
+
+      {/* ─── 3. HOW HARMONIQ WORKS PIPELINE ────────────────────────────── */}
+      <section className="bg-surface-card border border-white/5 rounded-3xl p-8 sm:p-12 space-y-10">
+        <div className="text-center max-w-2xl mx-auto space-y-2">
+          <span className="text-xs font-mono font-bold text-purple-400 uppercase tracking-widest">
+            End-to-End Architecture
           </span>
-        </h1>
+          <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+            How Harmoniq Secures Audio Ownership
+          </h2>
+          <p className="text-sm text-slate-400">
+            From raw studio audio stem extraction to immutable blockchain licensing and automated royalties.
+          </p>
+        </div>
 
-        <p className="max-w-2xl mx-auto text-gray-400 text-base sm:text-lg mb-10 leading-relaxed">
-          Harmoniq protects producer copyright with Proof-of-Stem™ acoustic fingerprinting,
-          immutable ERC-721 tokenization on Sepolia, and automated royalty splits among music collaborators.
-        </p>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="bg-[#080b11] border border-white/5 rounded-2xl p-6 space-y-3 relative group hover:border-purple-500/40 transition-all">
+            <div className="w-10 h-10 rounded-xl bg-purple-600/20 text-purple-400 font-mono font-bold flex items-center justify-center text-sm border border-purple-500/30">
+              01
+            </div>
+            <h3 className="text-base font-bold text-white">Proof-of-Stem™ Hashing</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              FastAPI microservice computes Chromaprint acoustic fingerprints and SHA-256 hashes to guarantee audio authenticity.
+            </p>
+          </div>
 
-        <div className="flex flex-wrap items-center justify-center gap-4">
+          <div className="bg-[#080b11] border border-white/5 rounded-2xl p-6 space-y-3 relative group hover:border-cyan-500/40 transition-all">
+            <div className="w-10 h-10 rounded-xl bg-cyan-600/20 text-cyan-400 font-mono font-bold flex items-center justify-center text-sm border border-cyan-500/30">
+              02
+            </div>
+            <h3 className="text-base font-bold text-white">ERC-721 NFT Minting</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Stems are tokenized via <code>StemNFT.sol</code> on Sepolia/Localhost with on-chain metadata URI and 5% ERC-2981 secondary royalties.
+            </p>
+          </div>
+
+          <div className="bg-[#080b11] border border-white/5 rounded-2xl p-6 space-y-3 relative group hover:border-emerald-500/40 transition-all">
+            <div className="w-10 h-10 rounded-xl bg-emerald-600/20 text-emerald-400 font-mono font-bold flex items-center justify-center text-sm border border-emerald-500/30">
+              03
+            </div>
+            <h3 className="text-base font-bold text-white">Licensing Escrow</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Buyers purchase Commercial, Remix, or Exclusive licenses. <code>StemLicensing.sol</code> retains 2.5% protocol fee and pays 97.5% directly to producer.
+            </p>
+          </div>
+
+          <div className="bg-[#080b11] border border-white/5 rounded-2xl p-6 space-y-3 relative group hover:border-amber-500/40 transition-all">
+            <div className="w-10 h-10 rounded-xl bg-amber-600/20 text-amber-400 font-mono font-bold flex items-center justify-center text-sm border border-amber-500/30">
+              04
+            </div>
+            <h3 className="text-base font-bold text-white">Collaborator Royalty Split</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              <code>RoyaltySplitter.sol</code> executes a single atomic transaction dividing payouts proportionally across all collaborator wallets (10,000 BPS).
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── 4. TRENDING AUDIO STEMS ────────────────────────────────────── */}
+      <section className="space-y-6">
+        <div className="flex items-end justify-between">
+          <div>
+            <span className="text-xs font-mono font-bold text-purple-400 uppercase tracking-widest">
+              Live Catalog
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+              Featured Audio Stems
+            </h2>
+            <p className="text-sm text-slate-400 mt-1">
+              Listen to isolated instrument stems, preview waveforms, and license on-chain
+            </p>
+          </div>
+
           <Link
             to="/marketplace"
-            className="px-8 py-3.5 rounded-xl font-bold text-white bg-purple-600 hover:bg-purple-500 transition-all shadow-lg shadow-purple-900/30 text-sm"
+            className="text-xs font-mono font-bold text-purple-400 hover:text-purple-300 flex items-center gap-1.5 transition-colors"
           >
-            Explore Stem Catalog
-          </Link>
-          <Link
-            to="/upload"
-            className="px-8 py-3.5 rounded-xl font-bold text-gray-300 hover:text-white bg-gray-900 hover:bg-gray-800 border border-gray-700/80 transition-all text-sm"
-          >
-            Upload Master & Split Stems
-          </Link>
-        </div>
-      </section>
-
-      {/* Stats Counter Row */}
-      <section className="grid grid-cols-1 sm:grid-cols-3 gap-6 my-12">
-        <div className="bg-gray-900/60 border border-gray-800 rounded-2xl p-6 text-center">
-          <div className="text-3xl font-extrabold text-purple-400 font-mono mb-1">{stats.stems}+</div>
-          <div className="text-xs uppercase font-semibold text-gray-400">Indexed Audio Stems</div>
-        </div>
-        <div className="bg-gray-900/60 border border-gray-800 rounded-2xl p-6 text-center">
-          <div className="text-3xl font-extrabold text-indigo-400 font-mono mb-1">{stats.minted}</div>
-          <div className="text-xs uppercase font-semibold text-gray-400">Sepolia Proof-of-Stem™ Mints</div>
-        </div>
-        <div className="bg-gray-900/60 border border-gray-800 rounded-2xl p-6 text-center">
-          <div className="text-3xl font-extrabold text-emerald-400 font-mono mb-1">{stats.licenses}</div>
-          <div className="text-xs uppercase font-semibold text-gray-400">Smart Contract Licenses Issued</div>
-        </div>
-      </section>
-
-      {/* Featured / Popular Stems */}
-      <section className="my-16">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-2xl font-bold text-white">Trending Audio Stems</h2>
-            <p className="text-sm text-gray-400 mt-1">High-demand stems ranked by community critique and licenses</p>
-          </div>
-          <Link to="/marketplace" className="text-sm font-semibold text-purple-400 hover:text-purple-300">
-            View All →
+            <span>View Full Catalog</span>
+            <span>→</span>
           </Link>
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map((n) => (
-              <div key={n} className="h-44 rounded-xl bg-gray-900/50 animate-pulse border border-gray-800" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 py-12">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="bg-surface-card border border-white/5 rounded-2xl p-6 h-64 animate-pulse flex flex-col justify-between"
+              >
+                <div className="h-6 w-24 bg-slate-800 rounded-lg" />
+                <div className="space-y-2">
+                  <div className="h-4 w-48 bg-slate-800 rounded" />
+                  <div className="h-3 w-32 bg-slate-800 rounded" />
+                </div>
+                <div className="h-10 bg-slate-800 rounded-xl" />
+              </div>
             ))}
           </div>
-        ) : popularStems.length > 0 ? (
+        ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {popularStems.map((stem) => (
               <StemCard key={stem.stem_id} stem={stem} />
             ))}
           </div>
-        ) : (
-          <p className="text-gray-500 text-sm">No trending stems found. Check database connection.</p>
         )}
       </section>
 
-      {/* How it Works / Core Pillars */}
-      <section className="my-20">
-        <h2 className="text-2xl font-bold text-white text-center mb-12">Dual-Tier Hybrid Architecture</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="bg-gray-900/70 border border-gray-800 rounded-2xl p-6">
-            <div className="w-10 h-10 rounded-xl bg-purple-900/50 text-purple-300 flex items-center justify-center font-bold mb-4">1</div>
-            <h3 className="text-lg font-bold text-white mb-2">Proof-of-Stem™ Fingerprint</h3>
-            <p className="text-sm text-gray-400 leading-relaxed">
-              Every drum, bass, vocal, and melody stem has an acoustic hash and AI seed parameter indexed in PostgreSQL to detect cloned or deepfaked samples.
-            </p>
+      {/* ─── 5. ACADEMIC CREDENTIALS FOOTER ─────────────────────────────── */}
+      <footer className="border-t border-white/5 pt-12 pb-8">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-slate-400">
+          <div>
+            <span className="text-white font-bold">Harmoniq</span> &bull; Blockchain-Based Song Stem Management System
           </div>
-
-          <div className="bg-gray-900/70 border border-gray-800 rounded-2xl p-6">
-            <div className="w-10 h-10 rounded-xl bg-indigo-900/50 text-indigo-300 flex items-center justify-center font-bold mb-4">2</div>
-            <h3 className="text-lg font-bold text-white mb-2">Sepolia ERC-721 Tokenization</h3>
-            <p className="text-sm text-gray-400 leading-relaxed">
-              Stems are minted into immutable ERC-721 tokens with permanent copyright timestamps, publicly auditable on Ethereum Sepolia block explorers.
-            </p>
+          <div className="flex items-center gap-4 font-mono text-[11px]">
+            <span>Milan Barik (1RV24IS070)</span>
+            <span>&bull;</span>
+            <span>Mohammed Kashif Ashfiyaan (1RV24IS074)</span>
           </div>
-
-          <div className="bg-gray-900/70 border border-gray-800 rounded-2xl p-6">
-            <div className="w-10 h-10 rounded-xl bg-emerald-900/50 text-emerald-300 flex items-center justify-center font-bold mb-4">3</div>
-            <h3 className="text-lg font-bold text-white mb-2">Automated Royalty Splits</h3>
-            <p className="text-sm text-gray-400 leading-relaxed">
-              Smart contracts automatically disburse incoming license ETH payments among collaborating musicians and sound engineers in real time.
-            </p>
-          </div>
+          <div>Dept. of Information Science & Engineering, RVCE</div>
         </div>
-      </section>
+      </footer>
     </div>
-  )
+  );
 }

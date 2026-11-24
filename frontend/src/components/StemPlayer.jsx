@@ -1,68 +1,202 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react';
 
-export default function StemPlayer({ fileUrl, stemName }) {
-  const [isPlaying, setIsPlaying] = useState(false)
-  const audioRef = useRef(null)
+export default function StemPlayer({ fileUrl, stemName, stemType = 'Audio' }) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(0.85);
+  const [isLooping, setIsLooping] = useState(true);
+  const audioRef = useRef(null);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+      audioRef.current.loop = isLooping;
+    }
+  }, [volume, isLooping]);
 
   const togglePlay = () => {
-    if (!audioRef.current) return
+    if (!audioRef.current) return;
     if (isPlaying) {
-      audioRef.current.pause()
-      setIsPlaying(false)
+      audioRef.current.pause();
+      setIsPlaying(false);
     } else {
-      audioRef.current.play().catch((e) => console.log('Audio playback error:', e))
-      setIsPlaying(true)
+      audioRef.current.play().catch(() => {});
+      setIsPlaying(true);
     }
-  }
+  };
+
+  const handleTimeUpdate = () => {
+    if (audioRef.current) {
+      setCurrentTime(audioRef.current.currentTime);
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (audioRef.current) {
+      setDuration(audioRef.current.duration || 30);
+    }
+  };
+
+  const handleSeek = (e) => {
+    const time = parseFloat(e.target.value);
+    setCurrentTime(time);
+    if (audioRef.current) {
+      audioRef.current.currentTime = time;
+    }
+  };
+
+  const formatTime = (secs) => {
+    if (isNaN(secs)) return '0:00';
+    const m = Math.floor(secs / 60);
+    const s = Math.floor(secs % 60);
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
 
   return (
-    <div className="bg-gradient-to-r from-gray-900 via-purple-950/30 to-gray-900 border border-purple-900/30 rounded-2xl p-6 shadow-xl">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <span className="text-xs uppercase font-bold text-purple-400 tracking-wider">Audio Stem Preview</span>
-          <h4 className="text-xl font-bold text-white mt-0.5">{stemName || 'Stem Audio'}</h4>
-        </div>
-        <button
-          onClick={togglePlay}
-          className="w-12 h-12 rounded-full bg-purple-600 hover:bg-purple-500 text-white flex items-center justify-center transition-transform hover:scale-105 shadow-lg shadow-purple-600/30"
-          title={isPlaying ? 'Pause' : 'Play'}
-        >
-          {isPlaying ? (
-            <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-              <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-            </svg>
-          ) : (
-            <svg className="w-5 h-5 fill-current ml-0.5" viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-          )}
-        </button>
-      </div>
-
-      {/* Stylized Audio Waveform Graphic */}
-      <div className="h-16 flex items-center gap-1.5 px-4 py-2 bg-black/40 rounded-xl border border-gray-800/80 mb-4 overflow-hidden">
-        {[24, 48, 32, 60, 40, 75, 55, 30, 68, 85, 45, 90, 35, 70, 50, 65, 40, 80, 60, 45, 70, 30, 55, 75, 90, 60, 40, 50, 35, 65, 80, 45, 60, 30, 20].map((h, i) => (
-          <div
-            key={i}
-            className={`flex-1 rounded-full transition-all duration-300 ${
-              isPlaying
-                ? 'bg-gradient-to-t from-purple-500 to-violet-300 animate-pulse'
-                : 'bg-gray-700 hover:bg-purple-500/50'
-            }`}
-            style={{ height: `${h}%`, animationDelay: `${(i % 5) * 100}ms` }}
-          />
-        ))}
-      </div>
+    <div className="relative overflow-hidden bg-gradient-to-br from-[#0e1422] via-[#11192e] to-[#0e1422] border border-white/10 rounded-2xl p-6 shadow-2xl">
+      {/* Background ambient lighting */}
+      <div className="absolute top-0 right-0 w-80 h-80 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
 
       <audio
         ref={audioRef}
         src={fileUrl}
-        onEnded={() => setIsPlaying(false)}
-        onPause={() => setIsPlaying(false)}
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleLoadedMetadata}
+        onEnded={() => {
+          if (!isLooping) setIsPlaying(false);
+        }}
         onPlay={() => setIsPlaying(true)}
-        className="w-full h-10 accent-purple-600 rounded"
-        controls
+        onPause={() => setIsPlaying(false)}
       />
+
+      {/* Header Info */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[10px] font-mono uppercase tracking-widest font-bold px-2 py-0.5 rounded bg-purple-500/15 text-purple-300 border border-purple-500/30">
+              Studio Stem Engine
+            </span>
+            <span className="text-xs text-slate-400 font-mono font-medium">
+              44.1 kHz &bull; 24-bit PCM
+            </span>
+          </div>
+          <h4 className="text-2xl font-black text-white tracking-tight">
+            {stemName || 'Stem Audio Preview'}
+          </h4>
+        </div>
+
+        {/* Action badges: Loop and Download */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsLooping(!isLooping)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all border ${
+              isLooping
+                ? 'bg-purple-600/20 text-purple-300 border-purple-500/40 shadow-sm'
+                : 'bg-white/5 text-slate-400 border-white/5 hover:text-white'
+            }`}
+            title="Toggle Seamless Loop"
+          >
+            🔁 {isLooping ? 'Loop: ON' : 'Loop: OFF'}
+          </button>
+        </div>
+      </div>
+
+      {/* Interactive Waveform Visualizer */}
+      <div className="bg-[#080b11] border border-white/5 rounded-xl p-4 mb-4">
+        <div className="h-20 flex items-center gap-1 overflow-hidden px-1">
+          {[20, 45, 30, 65, 40, 85, 55, 75, 40, 95, 35, 70, 50, 60, 30, 80, 55, 40, 65, 80, 90, 45, 60, 30, 75, 50, 85, 40, 65, 35, 90, 55, 40, 70, 45, 80, 30, 60, 40, 25].map(
+            (height, i) => {
+              const progress = duration > 0 ? currentTime / duration : 0;
+              const barProgress = i / 40;
+              const isPast = barProgress <= progress;
+
+              return (
+                <div
+                  key={i}
+                  className={`flex-1 rounded-full transition-all duration-150 ${
+                    isPast
+                      ? 'bg-gradient-to-t from-purple-500 via-indigo-400 to-cyan-300'
+                      : 'bg-slate-700/50 hover:bg-slate-600'
+                  } ${isPlaying && isPast ? 'animate-pulse' : ''}`}
+                  style={{
+                    height: isPlaying
+                      ? `${Math.max(15, (height * (0.8 + Math.sin((i + currentTime * 5)) * 0.2)))}%`
+                      : `${height}%`,
+                  }}
+                />
+              );
+            }
+          )}
+        </div>
+
+        {/* Scrubber Range Slider */}
+        <div className="mt-2 flex items-center gap-3">
+          <span className="text-xs font-mono text-slate-400 w-10 text-right">
+            {formatTime(currentTime)}
+          </span>
+          <input
+            type="range"
+            min="0"
+            max={duration || 30}
+            step="0.05"
+            value={currentTime}
+            onChange={handleSeek}
+            className="flex-1 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-purple-500"
+          />
+          <span className="text-xs font-mono text-slate-400 w-10">
+            {formatTime(duration)}
+          </span>
+        </div>
+      </div>
+
+      {/* Audio Controls Bar */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          {/* Main Play / Pause Button */}
+          <button
+            onClick={togglePlay}
+            className="w-12 h-12 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white flex items-center justify-center transition-all shadow-lg shadow-purple-600/30 active:scale-95"
+            title={isPlaying ? 'Pause' : 'Play'}
+          >
+            {isPlaying ? (
+              <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5 fill-current ml-0.5" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            )}
+          </button>
+
+          <div className="flex flex-col">
+            <span className="text-xs font-bold text-white">
+              {isPlaying ? 'Playing Preview' : 'Paused'}
+            </span>
+            <span className="text-[11px] text-slate-400 font-mono">
+              Stem Type: {stemType}
+            </span>
+          </div>
+        </div>
+
+        {/* Volume Slider */}
+        <div className="hidden sm:flex items-center gap-2 bg-[#080b11] border border-white/5 rounded-xl px-3 py-2">
+          <span className="text-xs text-slate-400">
+            {volume === 0 ? '🔇' : volume < 0.5 ? '🔉' : '🔊'}
+          </span>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.05"
+            value={volume}
+            onChange={(e) => setVolume(parseFloat(e.target.value))}
+            className="w-20 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+            title="Volume"
+          />
+        </div>
+      </div>
     </div>
-  )
+  );
 }
