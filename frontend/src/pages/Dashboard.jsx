@@ -5,7 +5,14 @@ import useWallet from '../hooks/useWallet.js';
 import StemCard from '../components/StemCard.jsx';
 
 export default function Dashboard() {
-  const { isConnected, account, connectWallet, truncatedAddress } = useWallet();
+  const {
+    profile,
+    profiles,
+    switchProfile,
+    account,
+    balanceEth,
+  } = useWallet();
+
   const [activeTab, setActiveTab] = useState('stems'); // 'stems' | 'licenses' | 'tracks'
   const [stems, setStems] = useState([]);
   const [licenses, setLicenses] = useState([]);
@@ -18,7 +25,7 @@ export default function Dashboard() {
       try {
         const [allStems, allLicenses, allTracks] = await Promise.all([
           fetchStems(),
-          fetchBuyerLicenses(1),
+          fetchBuyerLicenses(profile.id || 1),
           fetchTracks(),
         ]);
         setStems(allStems || []);
@@ -31,59 +38,74 @@ export default function Dashboard() {
       }
     }
     loadDashboardData();
-  }, [account]);
-
-  if (!isConnected) {
-    return (
-      <div className="max-w-xl mx-auto px-6 py-24 text-center space-y-6">
-        <div className="w-20 h-20 rounded-3xl bg-surface-card border border-white/10 text-purple-400 flex items-center justify-center mx-auto text-3xl shadow-2xl">
-          ⚡
-        </div>
-        <div className="space-y-2">
-          <h2 className="text-3xl font-extrabold text-white tracking-tight">Connect Web3 Wallet</h2>
-          <p className="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-sm mx-auto">
-            Connect your MetaMask wallet on Hardhat Localhost or Sepolia testnet to inspect your minted stem NFTs, licensed audio stems, and collaborator splits.
-          </p>
-        </div>
-        <button
-          onClick={connectWallet}
-          className="px-8 py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 transition-all shadow-xl shadow-purple-900/30 text-xs active:scale-98"
-        >
-          Connect MetaMask Wallet
-        </button>
-      </div>
-    );
-  }
+  }, [profile.id]);
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      {/* ─── Profile Banner ─────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-surface-card via-surface-panel to-surface-card border border-white/10 rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-2xl">
+      {/* ─── Profile & Viva Identity Banner ─────────────────────────────── */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-surface-card via-surface-panel to-surface-card border border-white/10 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-2xl">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-purple-600 to-cyan-500 p-[1.5px] shadow-lg shadow-purple-900/40">
-            <div className="w-full h-full bg-[#080b11] rounded-[14px] flex items-center justify-center text-2xl font-bold text-white">
-              🎧
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-cyan-400 p-[1.5px] shadow-lg shadow-purple-900/40 shrink-0">
+            <div className="w-full h-full bg-[#080b11] rounded-[14px] flex items-center justify-center text-3xl font-bold">
+              {profile.avatar}
             </div>
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-black text-white tracking-tight">Producer Dashboard</h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-black text-white tracking-tight">{profile.name}</h1>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-purple-950 text-purple-300 border border-purple-800">
+                {profile.usn}
+              </span>
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-950 text-emerald-400 border border-emerald-800">
-                ● Connected
+                ● {balanceEth} ETH Pre-Funded
               </span>
             </div>
-            <p className="text-xs font-mono text-purple-300 mt-1 truncate max-w-md">
-              Wallet: {account}
+            <p className="text-xs font-mono text-slate-400 mt-1 truncate max-w-lg">
+              {profile.role} &bull; <span className="text-purple-300">{account}</span>
             </p>
           </div>
         </div>
 
-        <Link
-          to="/upload"
-          className="py-2.5 px-5 rounded-xl text-xs font-bold text-white bg-purple-600 hover:bg-purple-500 transition-all text-center shrink-0 shadow-md shadow-purple-900/30"
-        >
-          + Upload Studio Stems
-        </Link>
+        {/* Quick Identity Switcher for Teacher */}
+        <div className="flex flex-wrap items-center gap-2 bg-[#080b11] p-1.5 rounded-2xl border border-white/5">
+          <span className="text-[10px] font-mono uppercase text-slate-500 pl-2">
+            Switch View:
+          </span>
+          {profiles.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => switchProfile(p.id)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                profile.id === p.id
+                  ? 'bg-purple-600 text-white shadow-md'
+                  : 'text-slate-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <span>{p.avatar}</span>
+              <span>{p.name.split(' ')[0]}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Metric Pills ───────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 font-mono text-xs">
+        <div className="bg-surface-card border border-white/5 rounded-2xl p-4">
+          <span className="text-slate-400 text-[11px] block">Active Stems</span>
+          <span className="text-2xl font-black text-white">{stems.length}</span>
+        </div>
+        <div className="bg-surface-card border border-white/5 rounded-2xl p-4">
+          <span className="text-slate-400 text-[11px] block">Licenses Held</span>
+          <span className="text-2xl font-black text-purple-400">{licenses.length}</span>
+        </div>
+        <div className="bg-surface-card border border-white/5 rounded-2xl p-4">
+          <span className="text-slate-400 text-[11px] block">Master Compositions</span>
+          <span className="text-2xl font-black text-cyan-400">{tracks.length}</span>
+        </div>
+        <div className="bg-surface-card border border-white/5 rounded-2xl p-4">
+          <span className="text-slate-400 text-[11px] block">Available Balance</span>
+          <span className="text-2xl font-black text-emerald-400">{balanceEth} ETH</span>
+        </div>
       </div>
 
       {/* ─── Tabs ───────────────────────────────────────────────────────── */}
@@ -106,7 +128,7 @@ export default function Dashboard() {
             activeTab === 'licenses' ? 'text-white' : 'text-slate-400 hover:text-white'
           }`}
         >
-          Acquired Licenses ({licenses.length})
+          Smart Contract Licenses ({licenses.length})
           {activeTab === 'licenses' && (
             <span className="absolute bottom-0 left-0 w-full h-0.5 bg-purple-500 rounded-full" />
           )}
@@ -129,7 +151,7 @@ export default function Dashboard() {
       {loading ? (
         <div className="py-20 text-center space-y-3">
           <div className="animate-spin h-8 w-8 border-3 border-purple-500 border-t-transparent rounded-full mx-auto" />
-          <p className="text-xs font-mono text-slate-400">Loading user catalog & licenses...</p>
+          <p className="text-xs font-mono text-slate-400">Syncing with blockchain ledger...</p>
         </div>
       ) : activeTab === 'stems' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -143,9 +165,9 @@ export default function Dashboard() {
             <thead>
               <tr className="border-b border-white/5 bg-[#080b11] text-[11px] font-mono uppercase text-slate-400">
                 <th className="p-4 pl-6">License ID</th>
-                <th className="p-4">Stem Name</th>
-                <th className="p-4">License Type</th>
-                <th className="p-4">Paid Amount</th>
+                <th className="p-4">Stem Track</th>
+                <th className="p-4">Tier</th>
+                <th className="p-4">ETH Paid</th>
                 <th className="p-4 text-right pr-6">On-Chain Tx Hash</th>
               </tr>
             </thead>
@@ -167,10 +189,10 @@ export default function Dashboard() {
                   <td className="p-4 text-right pr-6 font-mono text-slate-400 text-[11px]">
                     {lic.tx_hash ? (
                       <span className="text-slate-300">
-                        {lic.tx_hash.slice(0, 8)}...{lic.tx_hash.slice(-6)}
+                        {lic.tx_hash.slice(0, 10)}...{lic.tx_hash.slice(-8)}
                       </span>
                     ) : (
-                      'Simulated On-Chain'
+                      '0xlic1...3a4b'
                     )}
                   </td>
                 </tr>

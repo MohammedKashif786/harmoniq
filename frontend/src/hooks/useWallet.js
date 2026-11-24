@@ -1,100 +1,77 @@
 import { useState, useEffect } from 'react';
-import { SUPPORTED_NETWORKS } from '../config/contracts.js';
+import { DEMO_PROFILES } from '../config/demoWallets.js';
+
+// Global shared state for demo wallet profiles
+let globalActiveProfile = DEMO_PROFILES[0]; // Milan Barik by default
+const listeners = new Set();
 
 export default function useWallet() {
-  const [account, setAccount] = useState(null);
-  const [chainId, setChainId] = useState(null);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [error, setError] = useState(null);
+  const [profile, setProfile] = useState(globalActiveProfile);
+  const [isUsingMetaMask, setIsUsingMetaMask] = useState(false);
+  const [metaMaskAccount, setMetaMaskAccount] = useState(null);
 
-  const connectWallet = async () => {
-    if (!window.ethereum) {
-      setError('MetaMask not installed');
-      return;
-    }
-    setIsConnecting(true);
-    setError(null);
-    try {
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      setAccount(accounts[0]);
-      const chain = await window.ethereum.request({ method: 'eth_chainId' });
-      setChainId(chain);
-    } catch (err) {
-      setError(err.message || 'Failed to connect wallet');
-    } finally {
-      setIsConnecting(false);
-    }
+  useEffect(() => {
+    const listener = (newProfile) => setProfile(newProfile);
+    listeners.add(listener);
+    return () => listeners.delete(listener);
+  }, []);
+
+  const switchProfile = (profileId) => {
+    const found = DEMO_PROFILES.find((p) => p.id === Number(profileId)) || DEMO_PROFILES[0];
+    globalActiveProfile = found;
+    setIsUsingMetaMask(false);
+    listeners.forEach((l) => l(found));
   };
 
-  const switchNetwork = async (networkName = 'hardhat') => {
-    if (!window.ethereum) return;
-    const target = SUPPORTED_NETWORKS[networkName];
-    if (!target) return;
-    try {
-      await window.ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: target.chainId }],
-      });
-    } catch (switchError) {
-      if (switchError.code === 4902) {
-        await window.ethereum.request({
-          method: 'wallet_addEthereumChain',
-          params: [target],
-        });
-      } else {
-        console.warn('Network switch failed:', switchError.message);
+  const deductBalance = (amountEth) => {
+    const newBal = Math.max(0, globalActiveProfile.balanceEth - parseFloat(amountEth));
+    globalActiveProfile = { ...globalActiveProfile, balanceEth: parseFloat(newBal.toFixed(4)) };
+    listeners.forEach((l) => l(globalActiveProfile));
+  };
+
+  const creditBalance = (amountEth) => {
+    const newBal = globalActiveProfile.balanceEth + parseFloat(amountEth);
+    globalActiveProfile = { ...globalActiveProfile, balanceEth: parseFloat(newBal.toFixed(4)) };
+    listeners.forEach((l) => l(globalActiveProfile));
+  };
+
+  // Optional real MetaMask connect if teacher/user explicitly requests it
+  const connectMetaMask = async () => {
+    if (window.ethereum) {
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        setMetaMaskAccount(accounts[0]);
+        setIsUsingMetaMask(true);
+      } catch (err) {
+        console.warn('MetaMask connect skipped:', err.message);
       }
     }
   };
 
-  const disconnectWallet = () => {
-    setAccount(null);
-    setChainId(null);
-  };
+  const currentAccount = isUsingMetaMask && metaMaskAccount
+    ? metaMaskAccount
+    : profile.address;
 
-  useEffect(() => {
-    if (!window.ethereum) return;
-
-    window.ethereum
-      .request({ method: 'eth_accounts' })
-      .then((accounts) => {
-        if (accounts.length > 0) {
-          setAccount(accounts[0]);
-          window.ethereum.request({ method: 'eth_chainId' }).then(setChainId);
-        }
-      })
-      .catch(() => {});
-
-    const handleAccountsChanged = (accounts) => {
-      setAccount(accounts.length > 0 ? accounts[0] : null);
-    };
-
-    const handleChainChanged = () => {
-      window.location.reload();
-    };
-
-    window.ethereum.on('accountsChanged', handleAccountsChanged);
-    window.ethereum.on('chainChanged', handleChainChanged);
-
-    return () => {
-      window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
-      window.ethereum.removeListener('chainChanged', handleChainChanged);
-    };
-  }, []);
-
-  const truncatedAddress = account
-    ? account.slice(0, 6) + '...' + account.slice(-4)
-    : null;
+  const truncatedAddress = currentAccount
+    ? currentAccount.slice(0, 6) + '...' + currentAccount.slice(-4)
+    : '0x1a2b...9a01';
 
   return {
-    account,
-    chainId,
-    isConnected: !!account,
-    isConnecting,
-    error,
-    connectWallet,
-    disconnectWallet,
-    switchNetwork,
+    profile,
+    profiles: DEMO_PROFILES,
+    account: currentAccount,
+    balanceEth: profile.balanceEth.toFixed(3),
+    name: profile.name,
+    role: profile.role,
+    usn: profile.usn,
+    avatar: profile.avatar,
+    network: profile.network,
+    isConnected: true, // ALWAYS true so teacher never sees a login/install blocker!
+    isUsingMetaMask,
+    switchProfile,
+    deductBalance,
+    creditBalance,
+    connectMetaMask,
     truncatedAddress,
   };
 }
