@@ -5,6 +5,7 @@ import { supabaseBrowser } from "@/lib/supabaseBrowser";
 import { useProfile } from "@/lib/useProfile";
 import { sha256Hex } from "@/lib/hash";
 import { hasStoredFile } from "@/lib/download";
+import { backendPost } from "@/lib/backend";
 
 interface Offer { license_type: string; price_eth: number }
 interface Stem {
@@ -354,6 +355,14 @@ function StemRow({ stem, busy, act }: { stem: Stem; busy: boolean; act: Act }) {
     }, "Stem updated.");
   }
 
+  function mint() {
+    if (!confirm(`Mint "${stem.stem_name}" on Sepolia? This cannot be undone.`)) return;
+    act(async () => {
+      const r = await backendPost<{ simulated?: boolean; message?: string }>(`/api/stems/${stem.stem_id}/mint`);
+      if (r.simulated) throw new Error(r.message ?? "The minting service is in demo mode, so nothing was minted.");
+    }, "Minted on-chain. The token and transaction hash are saved to your stem.");
+  }
+
   function remove() {
     if (!confirm(`Delete the stem "${stem.stem_name}"?`)) return;
     act(async () => {
@@ -376,6 +385,9 @@ function StemRow({ stem, busy, act }: { stem: Stem; busy: boolean; act: Act }) {
           {stem.is_ai_generated && <span className="badge ai">AI-generated</span>}{" "}
           {minted ? <span className="verified">Verified on-chain</span> : <span className="muted small">Not minted</span>}
         </div>
+        {!minted && (
+          <button type="button" className="btn-ghost" disabled={busy} onClick={mint}>Mint on Sepolia</button>
+        )}
       </div>
       <details className="manage">
         <summary>Rename, set prices or delete</summary>
