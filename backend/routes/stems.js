@@ -155,63 +155,71 @@ router.post('/', async (req, res, next) => {
   }
 });
 
-// POST /:id/mint — mint a stem as an ERC-721 NFT on chain
+// POST /:id/mint — mint a stem as an ERC-721 token (stem owner only).
+// A mint is only saved if the blockchain transaction really happened.
+// DEMO_MODE=true returns a simulated result and writes NOTHING to the database.
 router.post('/:id/mint', async (req, res, next) => {
-  const { id } = req.params;
+  const stemId = Number(req.params.id);
+  if (!Number.isInteger(stemId) || stemId < 1) {
+    return res.status(400).json({ error: 'Invalid stem id' });
+  }
+  const demo = process.env.DEMO_MODE === 'true';
+
   try {
-    let stem = null;
-    try {
-      const { data } = await supabase
-        .from('audio_stems')
-        .select('*, tracks(creator_id, producers(wallet_address))')
-        .eq('stem_id', id)
-        .single();
-      stem = data;
-    } catch {
-      stem = demoStems.find(s => String(s.stem_id) === String(id)) || demoStems[0];
+    const { data: stem, error } = await supabaseAdmin
+      .from('audio_stems')
+      .select('stem_id, acoustic_hash, tracks(creator_id)')
+      .eq('stem_id', stemId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!stem) return res.status(404).json({ error: 'Stem not found' });
+
+    const producer = req.producer;
+    if (!producer || producer.role !== 'producer' || stem.tracks?.creator_id !== producer.producer_id) {
+      return res.status(403).json({ error: 'Only the owner of this stem can mint it' });
+    }
+    if (!producer.wallet_address) {
+      return res.status(400).json({ error: 'Add your wallet address to your profile first' });
     }
 
-    const ownerWallet = stem?.tracks?.producers?.wallet_address || req.body.owner_wallet || '0x1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a01';
-    const metadataURI = req.body.metadata_uri || `ipfs://stem-${id}-${stem?.acoustic_hash || 'hash'}`;
+    const { data: already } = await supabaseAdmin
+      .from('stem_mints').select('mint_id').eq('stem_id', stemId).maybeSingle();
+    if (already) return res.status(409).json({ error: 'This stem is already minted' });
 
-    // Call blockchain mint
-    let mintResult = null;
+    const metadataURI = req.body?.metadata_uri || `ipfs://stem-${stemId}-${stem.acoustic_hash}`;
+
+    let result;
     try {
-      mintResult = await mintStemNFT(Number(id), ownerWallet, metadataURI);
+      result = await mintStemNFT(stemId, producer.wallet_address, metadataURI);
     } catch (chainErr) {
-      console.warn('Blockchain mint transaction simulated:', chainErr.message);
-      mintResult = {
-        tokenId: Number(id) + 1000,
-        txHash: '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join(''),
-        contractAddress: process.env.STEM_NFT_ADDRESS || '0x5b2e0000000000000000000000000000000071d0',
-      };
+      if (!demo) {
+        return res.status(502).json({ error: `Blockchain mint failed: ${chainErr.message}` });
+      }
+      return res.status(200).json({
+        simulated: true,
+        message: 'DEMO_MODE is on: nothing was written to the blockchain or the database.',
+      });
     }
 
-    const mintRecord = {
-      mint_id: 999,
-      stem_id: Number(id),
-      token_id: Number(mintResult.tokenId || id),
-      tx_hash: mintResult.txHash,
-      contract_address: mintResult.contractAddress,
-      owner_wallet: ownerWallet,
-      minted_at: new Date().toISOString(),
-    };
-
-    try {
-      await supabaseAdmin.from('stem_mints').insert([mintRecord]);
-    } catch {}
-
-    // Update demo stem if present
-    const existing = demoStems.find(s => String(s.stem_id) === String(id));
-    if (existing) {
-      existing.stem_mints = [mintRecord];
+    const { data: mint, error: insertError } = await supabaseAdmin
+      .from('stem_mints')
+      .insert([{
+        stem_id: stemId,
+        token_id: Number(result.tokenId),
+        tx_hash: result.txHash,
+        contract_address: result.contractAddress,
+        owner_wallet: producer.wallet_address,
+      }])
+      .select()
+      .single();
+    if (insertError) {
+      return res.status(500).json({
+        error: `Minted on chain but the record could not be saved. Keep this transaction hash: ${result.txHash}`,
+        blockchain: result,
+      });
     }
 
-    res.status(201).json({
-      message: 'Stem minted successfully as ERC-721 NFT',
-      mint: mintRecord,
-      blockchain: mintResult,
-    });
+    res.status(201).json({ message: 'Stem minted as an ERC-721 token', mint, blockchain: result });
   } catch (err) {
     next(err);
   }

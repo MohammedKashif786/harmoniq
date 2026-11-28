@@ -10,12 +10,17 @@ import stemsRouter from './routes/stems.js';
 import licensesRouter from './routes/licenses.js';
 import royaltiesRouter from './routes/royalties.js';
 import reviewsRouter from './routes/reviews.js';
+import { writeGuard } from './middleware/auth.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
-app.use(cors());
+// Only the listed websites may call this API from a browser. Set FRONTEND_URL to a
+// comma-separated list (for example your Vercel address). Unset = open, for local demos only.
+const allowedOrigins = (process.env.FRONTEND_URL || '')
+  .split(',').map((o) => o.trim()).filter(Boolean);
+app.use(cors(allowedOrigins.length ? { origin: allowedOrigins } : undefined));
 app.use(
   helmet({
     contentSecurityPolicy: false, // Allow interactive inline scripts for API explorer
@@ -616,6 +621,9 @@ app.get('/api/health', (req, res) => {
 });
 
 // Routes
+// Every write (POST/PUT/PATCH/DELETE) needs a logged-in user. Reads stay public.
+app.use('/api', writeGuard);
+
 app.use('/api/producers', producersRouter);
 app.use('/api/tracks', tracksRouter);
 app.use('/api/stems', stemsRouter);
